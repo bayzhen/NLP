@@ -10,7 +10,7 @@ class Config:
     OUTPUT_DIR: str = "摘要文件列表"
     COMBINED_FILENAME: str = "!摘要文件总览.txt"
     ERROR_FILENAME: str = "!过滤文件总览.txt"
-    
+
     # 处理参数
     SUMMARY_LENGTH: int = 5
     KEYWORDS_LIMIT: int = 10
@@ -18,7 +18,7 @@ class Config:
     LINE_DELIMITER: str = "\n"
 
     # 超时保护
-    PROCESS_TIMEOUT = 5
+    PROCESS_TIMEOUT = 20
 
     # 翻译模型
     TRANSLATION_MODEL: str = "Helsinki-NLP/opus-mt-en-zh"
@@ -32,4 +32,3 @@ class Config:
     SOURCE_FOLDER: str = r"C:\Users\admin\Desktop\word_files"
     # 目标目录
     TARGET_FOLDER: str = r"C:\Users\admin\Desktop\summary_nlp"
-    
