@@ -24,9 +24,9 @@ class Config:
 
     # 线程配置
     MAX_WORKERS: int = (os.cpu_count() or 2) * 2
-    
+
     # 源目录
-    SOURCE_FOLDER: str = r"D:\GitHub\NLP\source_files"
+    SOURCE_FOLDER: str = r"C:\Users\admin\Desktop\word_files"
     # 目标目录
-    TARGET_FOLDER: str = r"D:\GitHub\NLP\target_files"
+    TARGET_FOLDER: str = r"C:\Users\admin\Desktop\summary_nlp"
     

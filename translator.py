@@ -11,11 +11,12 @@ class Translator:
 
     def _load_model(self) -> Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]:
         try:
-            tokenizer = AutoTokenizer.from_pretrained(Config.TRANSLATION_MODEL)
-            model = AutoModelForSeq2SeqLM.from_pretrained(Config.TRANSLATION_MODEL)
+            tokenizer = AutoTokenizer.from_pretrained(Config.TRANSLATION_MODEL, local_files_only=True)
+            model = AutoModelForSeq2SeqLM.from_pretrained(Config.TRANSLATION_MODEL, local_files_only=True)
             return model, tokenizer
         except Exception as e:
             raise RuntimeError(
+                f"{e}"
                 f"模型加载失败，请执行以下命令下载：\n"
                 f"from transformers import AutoTokenizer, AutoModelForSeq2SeqLM\n"
                 f"AutoTokenizer.from_pretrained('{Config.TRANSLATION_MODEL}')\n"

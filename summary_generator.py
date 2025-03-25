@@ -8,6 +8,7 @@ from text_extractor import TextExtractor
 from pathlib import Path
 from translator import Translator
 import re
+import os
 
 
 class SummaryGenerator:
@@ -35,6 +36,7 @@ class SummaryGenerator:
     def _process_single_file(self, file_path: str, output_dir: Path) -> None:
         """处理单个文件"""
         try:
+            print(file_path)
             text = TextExtractor.extract(file_path)
             analysis = self._analyze_text(text)
             translations = self._generate_translations(file_path, analysis)
@@ -79,15 +81,24 @@ class SummaryGenerator:
             self._format_section("摘要", analysis["summary"], translations["summary"]),
         ]
 
-        # 生成相对路径并创建目录结构
-        src_path_obj = Path(src_path)
-        # 获取相对于源目录的相对路径
-        relative_path = src_path_obj.relative_to(Path(self.source_path).resolve())
-        # 保持原有目录结构但去除源目录前缀
-        output_file = output_dir / relative_path.with_suffix(".txt")
-        # 创建必要的父目录
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+        # # 生成相对路径并创建目录结构
+        # src_path_obj = Path(src_path)
+        # # 获取相对于源目录的相对路径
+        # relative_path = src_path_obj.relative_to(Path(self.source_path).resolve())
+        # # 保持原有目录结构但去除源目录前缀
+        # output_file = output_dir / relative_path.with_suffix(".txt")
+        # # 创建必要的父目录
+        # output_file.parent.mkdir(parents=True, exist_ok=True)
 
+        # file_name = os.path.basename(src_path)
+        # target_file_name = FileProcessor.change_extension(file_name)
+        # output_file = os.path.join(output_dir, target_file_name)
+
+        src_path_obj = Path(src_path)
+        # 直接获取文件名并替换扩展名
+        output_file = (output_dir / src_path_obj.name).with_suffix(".txt")
+        # 确保输出目录存在
+        output_file.parent.mkdir(parents=True, exist_ok=True)
         output_file.write_text("\n".join(filter(None, content)), encoding="utf-8")
 
     @staticmethod

@@ -2,13 +2,14 @@
 import pdfplumber
 import openpyxl
 import win32com.client as win32
-from docx import Document
 from typing import Any, Dict
 from contextlib import contextmanager
 from config import Config
 from pathlib import Path
 from datetime import datetime
-
+import xlrd
+import os
+from new_docx_handler import NewDocxHandler
 
 class TextExtractor:
     """多格式文本提取器"""
@@ -43,23 +44,52 @@ class TextExtractor:
 
     @classmethod
     def _handle_doc(cls, file_path: str) -> str:
-        """处理旧版Word文档"""
-        with cls._word_context() as word:
+        """处理旧版Word文档，确保资源正确释放"""
+        file_path = os.path.abspath(file_path)  # 转换为绝对路径
+        word = win32.gencache.EnsureDispatch("Word.Application")
+        word.Visible = False
+        doc = None
+        try:
             doc = word.Documents.Open(file_path)
             content = doc.Content.Text
-            doc.Close()
             return content
+        except Exception as e:
+            # 可根据需要捕获特定异常，如COMException
+            raise RuntimeError(f"处理Word文档失败: {file_path}") from e
+        finally:
+            if doc is not None:
+                doc.Close(SaveChanges=False)  # 不保存更改
+            word.Quit()
 
     @staticmethod
     def _handle_docx(file_path: str) -> str:
         """处理新版Word文档"""
-        return "\n".join(p.text for p in Document(file_path).paragraphs)
+        # result = "\n".join(p.text for p in Document(file_path).paragraphs)
+        result = NewDocxHandler.handle_docx(file_path)
+        return result
+
 
     @classmethod
     def _handle_xls(cls, file_path: str) -> str:
         """处理旧版Excel文件"""
-        # 使用xlrd实现（需补充）
-        ...
+        workbook = xlrd.open_workbook(file_path)
+        all_text = ""
+        for sheet_name in workbook.sheet_names():
+            sheet = workbook.sheet_by_name(sheet_name)
+            for row_idx in range(sheet.nrows):
+                row_data = []
+                for col_idx in range(sheet.ncols):
+                    cell_value = sheet.cell_value(row_idx, col_idx)
+                    # 将内容转为字符串（处理数字、日期等类型）
+                    if isinstance(cell_value, float):
+                        cell_value = str(int(cell_value)) if cell_value.is_integer() else str(cell_value)
+                    else:
+                        cell_value = str(cell_value)
+                    row_data.append(cell_value)
+                for row in row_data:
+                    all_text += "\t" + row
+                all_text += "\n"
+        return all_text
 
     @classmethod
     def _handle_xlsx(cls, file_path: str) -> str:
@@ -95,13 +125,3 @@ class TextExtractor:
         if isinstance(value, datetime):
             return value.strftime("%Y-%m-%d %H:%M:%S")
         return str(value).strip()
-
-    @contextmanager
-    def _word_context():
-        """Word应用程序上下文管理器"""
-        try:
-            word = win32.gencache.EnsureDispatch("Word.Application")
-            word.Visible = False
-            yield word
-        finally:
-            word.Quit()

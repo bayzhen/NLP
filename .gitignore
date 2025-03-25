@@ -1,3 +1,5 @@
 source_files
 target_files
 __pycache__
+.idea
+Helsinki-NLP
