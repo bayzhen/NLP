@@ -10,17 +10,48 @@ from datetime import datetime
 import xlrd
 import os
 from new_docx_handler import NewDocxHandler
+from multiprocessing import Process, Queue
+
+class FileTooLargeError(Exception):
+    """文件处理超时异常"""
+    pass
 
 class TextExtractor:
-    """多格式文本提取器"""
+    """多格式文本提取器（新增超时机制）"""
 
     @classmethod
     def extract(cls, file_path: str) -> str:
-        """统一入口方法"""
+        """统一入口方法（添加超时控制）"""
         ext = Path(file_path).suffix.lower()
         handler = getattr(cls, f"_handle_{ext[1:]}", cls._handle_unsupported)
-        return handler(file_path)
+        return cls._run_with_timeout(handler, file_path, Config.PROCESS_TIMEOUT)
 
+    @classmethod
+    def _run_with_timeout(cls, handler, file_path, timeout):
+        """带超时控制的执行方法"""
+        queue = Queue()
+        
+        def worker(q, fp):
+            try:
+                result = handler(fp)
+                q.put(result)
+            except Exception as e:
+                q.put(e)
+        
+        p = Process(target=worker, args=(queue, file_path))
+        p.start()
+        p.join(timeout)
+        
+        if p.is_alive():
+            p.terminate()
+            p.join()
+            raise FileTooLargeError(f"文件处理超时，超过{timeout}秒")
+        
+        result = queue.get()
+        if isinstance(result, Exception):
+            raise result
+        return result
+    
     @staticmethod
     def _handle_unsupported(file_path: str) -> str:
         print("不支持的文件：", file_path)

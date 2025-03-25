@@ -16,7 +16,10 @@ class Config:
     KEYWORDS_LIMIT: int = 10
     CELL_DELIMITER: str = " "
     LINE_DELIMITER: str = "\n"
-    
+
+    # 超时保护
+    PROCESS_TIMEOUT = 5
+
     # 翻译模型
     TRANSLATION_MODEL: str = "Helsinki-NLP/opus-mt-en-zh"
     TRANSLATION_MAX_LENGTH: int = 512
